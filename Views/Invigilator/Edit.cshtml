@@ -1,0 +1,72 @@
+@model EditMarksViewModel
+@{
+    ViewData["Title"] = "Edit Marks";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="fa fa-pen-to-square"></i> Edit Marks</h1>
+        <p class="text-muted">Update marks for <strong>@Model.Name</strong> — Roll No: <span class="roll-badge">@Model.RollNumber</span></p>
+    </div>
+    <a href="/Invigilator/Dashboard" class="btn btn-outline"><i class="fa fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="form-card">
+    <form asp-action="Edit" asp-controller="Invigilator" method="post">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <input type="hidden" asp-for="RollNumber" />
+        <input type="hidden" asp-for="Name" />
+
+        <div class="form-section">
+            <h3><i class="fa fa-book"></i> Marks (1 – 100)</h3>
+            <div class="marks-grid">
+                <div class="form-group">
+                    <label asp-for="Maths"><i class="fa fa-square-root-variable"></i> Maths</label>
+                    <input asp-for="Maths" type="number" class="form-control mark-input" min="1" max="100" />
+                    <span asp-validation-for="Maths" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Physics"><i class="fa fa-atom"></i> Physics</label>
+                    <input asp-for="Physics" type="number" class="form-control mark-input" min="1" max="100" />
+                    <span asp-validation-for="Physics" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Chemistry"><i class="fa fa-flask"></i> Chemistry</label>
+                    <input asp-for="Chemistry" type="number" class="form-control mark-input" min="1" max="100" />
+                    <span asp-validation-for="Chemistry" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="English"><i class="fa fa-book-open"></i> English</label>
+                    <input asp-for="English" type="number" class="form-control mark-input" min="1" max="100" />
+                    <span asp-validation-for="English" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Programming"><i class="fa fa-code"></i> Programming</label>
+                    <input asp-for="Programming" type="number" class="form-control mark-input" min="1" max="100" />
+                    <span asp-validation-for="Programming" class="field-error"></span>
+                </div>
+            </div>
+            <div class="marks-preview">
+                <span>Live Preview — Total: <strong id="previewTotal">@(Model.Maths+Model.Physics+Model.Chemistry+Model.English+Model.Programming)</strong> | Average: <strong id="previewAvg">@(((Model.Maths+Model.Physics+Model.Chemistry+Model.English+Model.Programming)/5.0).ToString("F1"))</strong></span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="/Invigilator/Dashboard" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save Changes</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+const markInputs = document.querySelectorAll('.mark-input');
+markInputs.forEach(i => i.addEventListener('input', updatePreview));
+function updatePreview() {
+    const vals  = Array.from(markInputs).map(i => parseInt(i.value) || 0);
+    const total = vals.reduce((a, b) => a + b, 0);
+    document.getElementById('previewTotal').textContent = total;
+    document.getElementById('previewAvg').textContent   = (total / 5).toFixed(1);
+}
+</script>
+}

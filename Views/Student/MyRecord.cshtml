@@ -1,0 +1,77 @@
+@model Student
+@{
+    ViewData["Title"] = "My Academic Record";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="fa fa-id-card"></i> My Academic Record</h1>
+        <p class="text-muted">Greeting from Infinity tech <strong>@ViewBag.Username</strong></p>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Profile -->
+    <div class="profile-card card">
+        <div class="profile-avatar stu-avatar"><i class="fa fa-user-graduate"></i></div>
+        <h2>@Model.Name</h2>
+        <span class="roll-badge large">Roll No: @Model.RollNumber</span>
+        <div class="profile-grade grade-@Model.GradeClass">
+            <span class="grade-letter">@Model.Grade</span>
+            <span class="grade-label">Your Grade</span>
+        </div>
+        <div class="profile-stats">
+            <div class="pstat">
+                <span class="pstat-val">@Model.Total</span>
+                <span class="pstat-lbl">Total / 500</span>
+            </div>
+            <div class="pstat">
+                <span class="pstat-val">@Model.Average.ToString("F1")%</span>
+                <span class="pstat-lbl">Percentage</span>
+            </div>
+        </div>
+        <div class="result-banner @(Model.Average >= 50 ? "pass" : "fail")">
+            <i class="fa @(Model.Average >= 50 ? "fa-circle-check" : "fa-circle-xmark")"></i>
+            @(Model.Average >= 50 ? "PASS" : "FAIL")
+        </div>
+    </div>
+
+    <!-- Marks -->
+    <div class="marks-detail-card card">
+        <div class="card-header"><h3><i class="fa fa-chart-bar"></i> Subject Performance</h3></div>
+        <div class="subject-rows">
+            @{
+                var subjects = new[] {
+                    ("Maths",       Model.Maths,       "fa-square-root-variable"),
+                    ("Physics",     Model.Physics,     "fa-atom"),
+                    ("Chemistry",   Model.Chemistry,   "fa-flask"),
+                    ("English",     Model.English,     "fa-book-open"),
+                    ("Programming", Model.Programming, "fa-code")
+                };
+            }
+            @foreach (var (name, mark, icon) in subjects)
+            {
+                var cls = mark >= 80 ? "success" : mark >= 60 ? "warning" : "danger";
+                <div class="subject-row">
+                    <div class="subject-info">
+                        <i class="fa @icon"></i>
+                        <span>@name</span>
+                    </div>
+                    <div class="subject-bar">
+                        <div class="bar-fill bar-@cls" style="width: @mark%"></div>
+                    </div>
+                    <span class="subject-mark">@mark<small>/100</small></span>
+                </div>
+            }
+        </div>
+        <div class="total-row">
+            <span>Total Marks</span>
+            <strong>@Model.Total / 500</strong>
+        </div>
+    </div>
+</div>
+
+<div class="info-note">
+    <i class="fa fa-info-circle"></i>
+    Your marks are managed by your invigilator. Please contact them if you believe there is an error.
+</div>

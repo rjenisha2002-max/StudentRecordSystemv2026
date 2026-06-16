@@ -1,0 +1,246 @@
+@model List<Student>
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="fa fa-gauge"></i>  Dashboard</h1>
+        <p class="text-muted">Greetings from infinity tech  <strong>@ViewBag.Username</strong></p>
+    </div>
+    <a href="/Invigilator/Create" class="btn btn-primary">
+        <i class="fa fa-user-plus"></i> Add Student
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa fa-users"></i></div>
+        <div class="stat-info">
+            <span class="stat-num">@ViewBag.TotalStudents</span>
+            <span class="stat-label">Total Students</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa fa-chart-line"></i></div>
+        <div class="stat-info">
+            <span class="stat-num">@ViewBag.AverageScore</span>
+            <span class="stat-label">Class Average</span>
+        </div>
+    </div>
+    @if (ViewBag.TopStudent != null)
+    {
+        <div class="stat-card">
+            <div class="stat-icon gold"><i class="fa fa-trophy"></i></div>
+            <div class="stat-info">
+                <span class="stat-num">@((ViewBag.TopStudent as Student)?.Name)</span>
+                <span class="stat-label">Top Performer</span>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+    <form asp-action="Search" asp-controller="Invigilator" method="get">
+        <div class="search-group">
+            <i class="fa fa-search"></i>
+            <input type="text" name="roll" placeholder="Search by Roll Number (e.g. 10001)" maxlength="5" class="form-control" />
+            <button type="submit" class="btn btn-outline">Search</button>
+        </div>
+    </form>
+</div>
+
+<!-- Students Table -->
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fa fa-table"></i> All Student Records</h2>
+        <span class="badge">@Model.Count students</span>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="fa fa-user-slash"></i>
+            <p>No student records found.</p>
+            <a href="/Invigilator/Create" class="btn btn-primary">Add First Student</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="data-table" id="studentTable">
+                <thead>
+                    <tr>
+                        <th>Roll No.</th>
+                        <th>Name</th>
+                        <th>Maths</th>
+                        <th>Physics</th>
+                        <th>Chemistry</th>
+                        <th>English</th>
+                        <th>Programming</th>
+                        <th>Total</th>
+                        <th>Avg</th>
+                        <th>Grade</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr id="row-@s.RollNumber">
+                            <td><span class="roll-badge">@s.RollNumber</span></td>
+                            <td class="student-name">@s.Name</td>
+                            <td class="mark-cell" data-subject="Maths">@s.Maths</td>
+                            <td class="mark-cell" data-subject="Physics">@s.Physics</td>
+                            <td class="mark-cell" data-subject="Chemistry">@s.Chemistry</td>
+                            <td class="mark-cell" data-subject="English">@s.English</td>
+                            <td class="mark-cell" data-subject="Programming">@s.Programming</td>
+                            <td class="total-cell"><strong>@s.Total</strong></td>
+                            <td class="avg-cell">@s.Average.ToString("F1")</td>
+                            <td><span class="grade-badge grade-@s.GradeClass">@s.Grade</span></td>
+                            <td class="actions-cell">
+                                @* <a href="/Invigilator/Details/@s.RollNumber" class="btn-icon btn-view" title="View"><i class="fa fa-eye"></i></a> *@
+                                <button class="btn-icon btn-edit" title="Quick Edit" onclick="openQuickEdit('@s.RollNumber','@s.Name',@s.Maths,@s.Physics,@s.Chemistry,@s.English,@s.Programming)">
+                                    <i class="fa fa-pen"></i>
+                                </button>
+                                @* <a href="/Invigilator/Edit/@s.RollNumber" class="btn-icon btn-edit2" title="Edit Page"><i class="fa fa-pen-to-square"></i></a> *@
+                                <form asp-action="Delete" asp-controller="Invigilator" method="post" class="inline-form" onsubmit="return confirmDelete('@s.Name')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="roll" value="@s.RollNumber" />
+                                    <button type="submit" class="btn-icon btn-delete" title="Delete"><i class="fa fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Quick Edit Modal (AJAX) -->
+<div class="modal-overlay" id="quickEditModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa fa-pen"></i> Quick Edit Marks — <span id="modalStudentName"></span></h3>
+            <button class="modal-close" onclick="closeModal()"><i class="fa fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="qeRoll" />
+            <div class="marks-grid">
+                <div class="form-group">
+                    <label>Maths</label>
+                    <input type="number" id="qeMaths" class="form-control" min="1" max="100" />
+                </div>
+                <div class="form-group">
+                    <label>Physics</label>
+                    <input type="number" id="qePhysics" class="form-control" min="1" max="100" />
+                </div>
+                <div class="form-group">
+                    <label>Chemistry</label>
+                    <input type="number" id="qeChemistry" class="form-control" min="1" max="100" />
+                </div>
+                <div class="form-group">
+                    <label>English</label>
+                    <input type="number" id="qeEnglish" class="form-control" min="1" max="100" />
+                </div>
+                <div class="form-group">
+                    <label>Programming</label>
+                    <input type="number" id="qeProgramming" class="form-control" min="1" max="100" />
+                </div>
+            </div>
+            <div id="modalMsg" class="modal-msg"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitQuickEdit()"><i class="fa fa-save"></i> Save Changes</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmDelete(name) {
+    return confirm(`Are you sure you want to remove ${name}'s record? This action cannot be undone.`);
+}
+
+function openQuickEdit(roll, name, m, p, c, e, pr) {
+    document.getElementById('qeRoll').value = roll;
+    document.getElementById('modalStudentName').textContent = name + ' (' + roll + ')';
+    document.getElementById('qeMaths').value = m;
+    document.getElementById('qePhysics').value = p;
+    document.getElementById('qeChemistry').value = c;
+    document.getElementById('qeEnglish').value = e;
+    document.getElementById('qeProgramming').value = pr;
+    document.getElementById('modalMsg').textContent = '';
+    document.getElementById('quickEditModal').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('quickEditModal').classList.remove('active');
+}
+
+async function submitQuickEdit() {
+    const roll = document.getElementById('qeRoll').value;
+    const payload = {
+        rollNumber:  roll,
+        maths:       parseInt(document.getElementById('qeMaths').value),
+        physics:     parseInt(document.getElementById('qePhysics').value),
+        chemistry:   parseInt(document.getElementById('qeChemistry').value),
+        english:     parseInt(document.getElementById('qeEnglish').value),
+        programming: parseInt(document.getElementById('qeProgramming').value)
+    };
+
+    // Client-side validation
+    const subjects = ['maths','physics','chemistry','english','programming'];
+    for (const s of subjects) {
+        if (!payload[s] || payload[s] < 1 || payload[s] > 100) {
+            showModalMsg('All marks must be between 1 and 100.', 'error'); return;
+        }
+    }
+
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const res = await fetch('/Invigilator/UpdateMarksAjax', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            showModalMsg(data.message, 'success');
+            // Update table row live
+            const row = document.getElementById('row-' + roll);
+            if (row) {
+                const cells = row.querySelectorAll('.mark-cell');
+                const vals = [payload.maths, payload.physics, payload.chemistry, payload.english, payload.programming];
+                cells.forEach((c, i) => c.textContent = vals[i]);
+                row.querySelector('.total-cell strong').textContent = data.total;
+                row.querySelector('.avg-cell').textContent = data.average;
+                const gradeEl = row.querySelector('.grade-badge');
+                gradeEl.textContent = data.grade;
+                gradeEl.className = 'grade-badge grade-' + (data.average >= 80 ? 'success' : data.average >= 60 ? 'warning' : 'danger');
+            }
+            setTimeout(closeModal, 1200);
+        } else {
+            showModalMsg(data.message || 'Update failed.', 'error');
+        }
+    } catch (err) {
+        showModalMsg('Network error. Please try again.', 'error');
+    }
+}
+
+function showModalMsg(msg, type) {
+    const el = document.getElementById('modalMsg');
+    el.textContent = msg;
+    el.className = 'modal-msg ' + type;
+}
+
+// Close modal on overlay click
+document.getElementById('quickEditModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+}

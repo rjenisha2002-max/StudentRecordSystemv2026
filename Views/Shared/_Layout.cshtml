@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " — " : "")Student Record System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @{
+        var role     = Context.Session.GetString("Role");
+        var username = Context.Session.GetString("Username");
+        bool loggedIn = role != null;
+    }
+
+    @if (loggedIn)
+    {
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fa fa-graduation-cap"></i>
+                <span>Student Record System</span>
+            </div>
+            <div class="nav-links">
+                @if (role == "Invigilator")
+                {
+                    <a href="/Invigilator/Dashboard"><i class="fa fa-gauge"></i> Dashboard</a>
+                    <a href="/Invigilator/Create"><i class="fa fa-user-plus"></i> Add Student</a>
+                }
+                else
+                {
+                    <a href="/Student/MyRecord"><i class="fa fa-id-card"></i> My Record</a>
+                }
+                <div class="nav-user">
+                    <i class="fa fa-circle-user"></i>
+                    <span>@username</span>
+                    <span class="role-badge @(role == "Invigilator" ? "badge-inv" : "badge-stu")">@role</span>
+                    <a href="/Account/Logout" class="btn-logout"><i class="fa fa-right-from-bracket"></i> Logout</a>
+                </div>
+            </div>
+        </nav>
+    }
+
+    <main class="@(loggedIn ? "with-nav" : "")">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fa fa-circle-check"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                <i class="fa fa-triangle-exclamation"></i> @TempData["Error"]
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

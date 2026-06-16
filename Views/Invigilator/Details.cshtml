@@ -1,0 +1,93 @@
+@model Student
+@{
+    ViewData["Title"] = "Student Details";
+}
+
+<div class="page-header">
+    <div>
+        <h1><i class="fa fa-id-card"></i> Student Details</h1>
+    </div>
+    <div class="btn-group">
+        <a href="/Invigilator/Edit/@Model.RollNumber" class="btn btn-primary"><i class="fa fa-pen"></i> Edit Marks</a>
+        <a href="/Invigilator/Dashboard" class="btn btn-outline"><i class="fa fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Profile Card -->
+    <div class="profile-card card">
+        <div class="profile-avatar">
+            <i class="fa fa-user-graduate"></i>
+        </div>
+        <h2>@Model.Name</h2>
+        <span class="roll-badge large">Roll No: @Model.RollNumber</span>
+        <div class="profile-grade grade-@Model.GradeClass">
+            <span class="grade-letter">@Model.Grade</span>
+            <span class="grade-label">Grade</span>
+        </div>
+        <div class="profile-stats">
+            <div class="pstat">
+                <span class="pstat-val">@Model.Total</span>
+                <span class="pstat-lbl">Total / 500</span>
+            </div>
+            <div class="pstat">
+                <span class="pstat-val">@Model.Average.ToString("F1")</span>
+                <span class="pstat-lbl">Average</span>
+            </div>
+        </div>
+        <div class="profile-meta">
+            <span><i class="fa fa-calendar"></i> Created: @Model.CreatedAt.ToString("dd MMM yyyy")</span>
+            @if (Model.ModifiedAt.HasValue)
+            {
+                <span><i class="fa fa-pen"></i> Modified: @Model.ModifiedAt.Value.ToString("dd MMM yyyy")</span>
+            }
+        </div>
+    </div>
+
+    <!-- Marks Card -->
+    <div class="marks-detail-card card">
+        <div class="card-header"><h3><i class="fa fa-chart-bar"></i> Subject-wise Marks</h3></div>
+        <div class="subject-rows">
+            @{
+                var subjects = new[] {
+                    ("Maths",       Model.Maths,       "fa-square-root-variable"),
+                    ("Physics",     Model.Physics,     "fa-atom"),
+                    ("Chemistry",   Model.Chemistry,   "fa-flask"),
+                    ("English",     Model.English,     "fa-book-open"),
+                    ("Programming", Model.Programming, "fa-code")
+                };
+            }
+            @foreach (var (name, mark, icon) in subjects)
+            {
+                var pct = mark;
+                var cls = mark >= 80 ? "success" : mark >= 60 ? "warning" : "danger";
+                <div class="subject-row">
+                    <div class="subject-info">
+                        <i class="fa @icon"></i>
+                        <span>@name</span>
+                    </div>
+                    <div class="subject-bar">
+                        <div class="bar-fill bar-@cls" style="width: @pct%"></div>
+                    </div>
+                    <span class="subject-mark @cls-text">@mark<small>/100</small></span>
+                </div>
+            }
+        </div>
+
+        <div class="total-row">
+            <span>Total</span>
+            <strong>@Model.Total / 500</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Delete -->
+<div class="danger-zone card">
+    <h3><i class="fa fa-triangle-exclamation"></i> Danger Zone</h3>
+    <p>Removing this student's record is a soft delete and can be restored by an administrator.</p>
+    <form asp-action="Delete" asp-controller="Invigilator" method="post" onsubmit="return confirm('Remove @Model.Name from the system?')">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="roll" value="@Model.RollNumber" />
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Remove Student Record</button>
+    </form>
+</div>
